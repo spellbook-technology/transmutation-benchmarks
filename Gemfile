@@ -14,7 +14,7 @@ gem "fast_jsonapi"
 gem "jbuilder", "~> 2.10"
 gem "rabl"
 gem "representable"
-gem "transmutation", "~> 0.1"
+gem "transmutation", "~> 0.2"
 
 # JSON generators
 gem "multi_json"
