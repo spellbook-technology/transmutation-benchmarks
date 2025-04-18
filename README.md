@@ -19,21 +19,21 @@ The serializers measured include:
 (This is the condensed version, run the benchmarks to see the full results.)
 
 ```
-Using Ruby version: 3.0.6-p216
+Using Ruby version: 3.2.5-p208
 
 
 Member tests:
 
 
   Ultra Simple: Member                   Warmups       Iterations    Iterations    Total Iterations   Comparison
-                                        (i/100ms)     (i/s)         (std dev %)
+                                         (i/100ms)     (i/s)         (std dev %)
 
-  Jbuilder 2.12.0                             5.565k       59.920k   ± 1.1%           601.020k        3.89x slower
-  Rabl 0.16.1                                 6.714k       67.264k   ± 2.4%           678.114k        3.47x slower
-  Representable 3.2.0                        11.305k      112.898k   ± 1.9%             1.130M        2.06x slower
-  AMS 0.10.14                                11.615k      116.661k   ± 1.0%             1.173M        2.00x slower
-  FastJsonapi 1.5                            12.368k      133.234k   ± 1.5%             1.336M        1.75x slower
-  Transmutation 0.3.0                        23.365k      233.096k   ± 0.5%             2.336M
+  Rabl 0.17.0                                 7.419k       73.857k   ± 2.3%           741.900k        3.79x slower
+  Jbuilder 2.13.0                             7.484k       74.472k   ± 2.3%           748.400k        3.76x slower
+  Representable 3.2.0                        11.941k      118.882k   ± 1.6%             1.194M        2.36x slower
+  AMS 0.10.15                                15.668k      156.607k   ± 1.4%             1.567M        1.79x slower
+  FastJsonapi 1.5                            18.463k      186.237k   ± 0.6%             1.865M        1.50x slower
+  Transmutation 0.5.1                        28.332k      280.215k   ± 0.9%             2.805M
 
 
 Memory Usage:
@@ -41,13 +41,13 @@ Memory Usage:
 
   Ultra Simple: Member                   Memory Usage   Comparison
 
-  Transmutation 0.3.0                         1.836k
-  FastJsonapi 1.5                             2.440k    1.33x more
-  AMS 0.10.14                                 3.284k    1.79x more
-  Jbuilder 2.12.0                             3.514k    1.91x more
-  Representable 3.2.0                         4.156k    2.26x more
-  Rabl 0.16.1                                 5.549k    3.02x more
+  Transmutation 0.5.1                         1.216k
+  FastJsonapi 1.5                             1.896k    1.56x more
+  AMS 0.10.15                                 2.080k    1.71x more
+  Jbuilder 2.13.0                             2.600k    2.14x more
+  Representable 3.2.0                         4.104k    3.38x more
+  Rabl 0.17.0                                 5.864k    4.82x more
 
 
-Total wall clock time: 1m12.329s
+Total wall clock time: 1m12.266s
 ```

@@ -9,12 +9,12 @@ gem "rspec", "~> 3.0"
 gem "rubocop", "~> 1.21"
 
 # Serializers
-gem "active_model_serializers", "~> 0.10.0"
+gem "active_model_serializers"
 gem "fast_jsonapi"
-gem "jbuilder", "~> 2.10"
+gem "jbuilder"
 gem "rabl"
 gem "representable"
-gem "transmutation", "~> 0.2"
+gem "transmutation"
 
 # JSON generators
 gem "multi_json"
