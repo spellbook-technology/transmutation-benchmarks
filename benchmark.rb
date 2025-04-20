@@ -1,80 +1,55 @@
 # frozen_string_literal: true
 
-require "benchmark/ips"
-require "benchmark-memory"
-require "terminal-table"
-require "active_support/core_ext/object/deep_dup" # Required by AMS
+require "bundler/setup"
 
-require "transmutation"
-require "jbuilder"
-require "representable"
-require "active_model_serializers"
-require "fast_jsonapi"
-require "rabl"
-require_relative "lib/benchie"
-require_relative "lib/user"
-require_relative "lib/transmutation/user_serializer"
-require_relative "lib/representable/user_representer"
-require_relative "lib/active_model_serializers/user_serializer"
-require_relative "lib/fast_jsonapi/user_serializer"
+Bundler.require
 
-require "multi_json" # Required by Representable
-require "oj" # Required by Rabl
 Oj.mimic_JSON # Use OJ for benchmarks using #to_json
 MultiJson.use(:oj) # Use OJ by default from multi_json
 
-user = User.new(id: 1, first_name: "John", last_name: "Doe")
-jbuilder_template = File.read(File.expand_path("lib/jbuilder/user.json.jbuilder", __dir__))
-rabl_template = File.read(File.expand_path("lib/rabl/user.json.rabl", __dir__))
+loader = Zeitwerk::Loader.new
+loader.push_dir(File.expand_path("lib", __dir__))
+loader.collapse(File.expand_path("lib/models", __dir__))
+loader.collapse(File.expand_path("lib/serializers", __dir__))
+loader.setup
 
-Benchie.print_suite_banner
-Benchie.start
-
-Benchie.print_section_separator("Member tests")
-
-Benchie.measure("Ultra Simple: Member") do |x|
-  x.config(time: 10, warmup: 2)
-
-  x.report(format("%-36.36s", "Transmutation #{Transmutation::VERSION}")) { UserSerializer.new(user).to_json }
-  x.report(format("%-36.36s", "Jbuilder #{Gem.loaded_specs["jbuilder"].version}")) do
-    Jbuilder.encode do |json|
-      json.instance_eval(jbuilder_template)
-      json.target!
-    end
-  end
-  x.report(format("%-36.36s", "Representable #{Gem.loaded_specs["representable"].version}")) do
-    UserRepresenter.new(user).to_json
-  end
-  x.report(format("%-36.36s", "AMS #{ActiveModel::Serializer::VERSION}")) do
-    UserActiveSerializer.new(user).to_json
-  end
-  x.report(format("%-36.36s", "FastJsonapi #{Gem.loaded_specs["fast_jsonapi"].version}")) do
-    UserFastSerializer.new(user).serialized_json
-  end
-  x.report(format("%-36.36s", "Rabl #{Rabl::VERSION}")) { Rabl::Renderer.json(user, rabl_template) }
+Rabl.configure do |config|
+  config.include_json_root = false
 end
 
-Benchie.print_section_separator("Memory Usage")
+jbuilder_template = File.read(File.expand_path("lib/views/users/show.json.jbuilder", __dir__))
+rabl_template = File.read(File.expand_path("lib/views/users/show.json.rabl", __dir__))
 
-Benchie.measure_memory("Ultra Simple: Member") do |x|
-  x.report(format("%-36.36s", "Transmutation #{Transmutation::VERSION}")) { UserSerializer.new(user).to_json }
-  x.report(format("%-36.36s", "Jbuilder #{Gem.loaded_specs["jbuilder"].version}")) do
-    Jbuilder.encode do |json|
-      json.instance_eval(jbuilder_template)
-      json.target!
-    end
+user = User.new(id: 1, first_name: "John", last_name: "Doe", organisation_id: 1)
+
+SerializerBenchmarks.report do
+  group("Attributes") do
+    example("transmutation")            { Transmutation::UserSerializer.new(user).to_json }
+    example("panko_serializer")         { PankoSerializer::UserSerializer.new.serialize_to_json(user) }
+    example("jbuilder")                 { Jbuilder.encode { |json| json.instance_eval(jbuilder_template); json.target! } }
+    example("representable")            { Representable::UserRepresenter.new(user).to_json }
+    example("active_model_serializers") { ActiveModelSerializers::UserSerializer.new(user).to_json }
+    example("rabl")                     { Rabl::Renderer.json(user, rabl_template) }
+    example("jsonapi-serializer")       { Jsonapi::UserSerializer.new(user).to_json }
   end
-  x.report(format("%-36.36s", "Representable #{Gem.loaded_specs["representable"].version}")) do
-    UserRepresenter.new(user).to_json
-  end
-  x.report(format("%-36.36s", "AMS #{ActiveModel::Serializer::VERSION}")) do
-    UserActiveSerializer.new(user).to_json
-  end
-  x.report(format("%-36.36s", "FastJsonapi #{Gem.loaded_specs["fast_jsonapi"].version}")) do
-    UserFastSerializer.new(user).serialized_json
-  end
-  x.report(format("%-36.36s", "Rabl #{Rabl::VERSION}")) { Rabl::Renderer.json(user, rabl_template) }
+
+  # benchmark.group("Has One / Belongs To") do |group|
+  #   group.add(:transmutation)            { Transmutation::UserSerializer.new(user).to_json }
+  #   group.add(:panko_serializer)         { PankoSerializer::UserSerializer.new.serialize_to_json(user) }
+  #   group.add(:jbuilder)                 { JBuilder.encode { |json| json.instance_eval(jbuilder_template); json.target! } }
+  #   group.add(:representable)            { Representable::UserSerializer.new(user).to_json }
+  #   group.add(:active_model_serializers) { ActiveModelSerializers::SerializableResource.new(user).as_json }
+  #   group.add(:rabl)                     { Rabl::Renderer.json(user, rabl_template) }
+  #   group.add(:fast_jsonapi)             { FastJsonapi::UserSerializer.new(user).to_json }
+  # end
+
+  # benchmark.group("Has Many") do |group|
+  #   group.add(:transmutation)            { Transmutation::UserSerializer.new(user).to_json }
+  #   group.add(:panko_serializer)         { PankoSerializer::UserSerializer.new.serialize_to_json(user) }
+  #   group.add(:jbuilder)                 { JBuilder.encode { |json| json.instance_eval(jbuilder_template); json.target! } }
+  #   group.add(:representable)            { Representable::UserSerializer.new(user).to_json }
+  #   group.add(:active_model_serializers) { ActiveModelSerializers::SerializableResource.new(user).as_json }
+  #   group.add(:rabl)                     { Rabl::Renderer.json(user, rabl_template) }
+  #   group.add(:fast_jsonapi)             { FastJsonapi::UserSerializer.new(user).to_json }
+  # end
 end
-
-Benchie.end
-Benchie.print_suite_summary

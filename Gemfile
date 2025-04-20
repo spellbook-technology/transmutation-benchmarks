@@ -2,16 +2,16 @@
 
 source "https://rubygems.org"
 
-gem "rake", "~> 13.0"
+ruby file: ".ruby-version"
 
-gem "rspec", "~> 3.0"
-
-gem "rubocop", "~> 1.21"
+gem "pry"
+gem "rubocop"
 
 # Serializers
 gem "active_model_serializers"
-gem "fast_jsonapi"
+gem "jsonapi-serializer"
 gem "jbuilder"
+gem "panko_serializer"
 gem "rabl"
 gem "representable"
 gem "transmutation"
@@ -26,3 +26,6 @@ gem "benchmark-memory"
 
 # CLI formatting
 gem "terminal-table"
+
+# Auto-loader
+gem "zeitwerk"

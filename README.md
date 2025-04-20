@@ -1,53 +1,53 @@
 # Benchmarking popular Ruby JSON Serializers with Transmutation
 
-The serializers measured include:
+Transmutation provides a very simple and elegant DSL that outperforms the majority of other serializers on the market. It also boasts consistent performance with small standard deviation.
 
-- [RABL](https://github.com/nesquena/rabl/)
-- [ActiveModel Serializers](https://github.com/rails-api/active_model_serializers)
-- [Representable](https://github.com/trailblazer/representable)
-- [FastJsonapi](https://github.com/Netflix/fast_jsonapi)
-- [Jbuilder](https://github.com/rails/jbuilder)
+## Results
+
+### Attributes
+
+| Gem                                                                                       | IPS                | Comparison   | Allocations | Comparison |
+|------------------------------------------------------------------------------------------ | -----------------: | -----------: | ----------: | ---------: |
+| [panko_serializer 0.8.3](https://github.com/yosiat/panko_serializer)                      |    434.661k ±10.6% |     baseline |    856.000  |   baseline |
+| [transmutation 0.5.1](https://github.com/spellbook-technology/transmutation)              |    434.563k ± 0.7% | 1.00x slower |      1.256k | 1.47x more |
+| [active_model_serializers 0.10.15](https://github.com/rails-api/active_model_serializers) |    232.612k ± 3.5% | 1.87x slower |      2.080k | 2.43x more |
+| [jsonapi-serializer 2.2.0](https://github.com/jsonapi-serializer/jsonapi-serializer)      |    217.774k ± 1.6% | 2.00x slower |      3.160k | 3.69x more |
+| [representable 3.2.0](https://github.com/trailblazer/representable)                       |    168.576k ± 3.7% | 2.58x slower |      4.144k | 4.84x more |
+| [rabl 0.17.0](https://github.com/nesquena/rabl)                                           |    121.153k ± 4.5% | 3.59x slower |      5.696k | 6.65x more |
+| [jbuilder 2.13.0](https://github.com/rails/jbuilder)                                      |     88.500k ± 6.0% | 4.91x slower |      2.600k | 3.04x more |
+
+\* _Run with the following Ruby version:_ `ruby 3.2.5 (2024-07-26 revision 31d0f1a2e7) +YJIT [arm64-darwin24]`
+
+Output for all serialization is:
+
+```json
+{"id":1,"first_name":"John","full_name":"John Doe"}
+```
+
+With the exception of JSONAPI Serializer, as it follows the JSONAPI spec:
+
+```json
+{"data":{"id":"1","type":"user","attributes":{"id":1,"first_name":"John","full_name":"John Doe"}}}
+```
+
+### Has one / Belongs to association
+
+Coming soon.
+
+### Has many association
+
+Coming soon.
 
 ## Usage
 
 - Run the benchmarks
 
-        bundle exec ruby benchmark.rb
+    ```sh
+    bundle exec ruby benchmark.rb
+    ```
 
-## Results
+- With YJIT enabled
 
-(This is the condensed version, run the benchmarks to see the full results.)
-
-```
-Using Ruby version: 3.2.5-p208
-
-
-Member tests:
-
-
-  Ultra Simple: Member                   Warmups       Iterations    Iterations    Total Iterations   Comparison
-                                         (i/100ms)     (i/s)         (std dev %)
-
-  Rabl 0.17.0                                 7.419k       73.857k   ± 2.3%           741.900k        3.79x slower
-  Jbuilder 2.13.0                             7.484k       74.472k   ± 2.3%           748.400k        3.76x slower
-  Representable 3.2.0                        11.941k      118.882k   ± 1.6%             1.194M        2.36x slower
-  AMS 0.10.15                                15.668k      156.607k   ± 1.4%             1.567M        1.79x slower
-  FastJsonapi 1.5                            18.463k      186.237k   ± 0.6%             1.865M        1.50x slower
-  Transmutation 0.5.1                        28.332k      280.215k   ± 0.9%             2.805M
-
-
-Memory Usage:
-
-
-  Ultra Simple: Member                   Memory Usage   Comparison
-
-  Transmutation 0.5.1                         1.216k
-  FastJsonapi 1.5                             1.896k    1.56x more
-  AMS 0.10.15                                 2.080k    1.71x more
-  Jbuilder 2.13.0                             2.600k    2.14x more
-  Representable 3.2.0                         4.104k    3.38x more
-  Rabl 0.17.0                                 5.864k    4.82x more
-
-
-Total wall clock time: 1m12.266s
-```
+    ```sh
+    bundle exec ruby --yjit benchmark.rb
+    ```
