@@ -5,7 +5,11 @@ require "bundler/setup"
 
 Bundler.require
 
-require "./lib/serializer_benchmarks"
+loader = Zeitwerk::Loader.new
+loader.push_dir(File.expand_path("../lib", __dir__))
+loader.collapse(File.expand_path("../lib/models", __dir__))
+loader.collapse(File.expand_path("../lib/serializers", __dir__))
+loader.setup
 
 # You can add fixtures and/or initialization code here to make experimenting
 # with your gem easier. You can also use a different console, if you like.

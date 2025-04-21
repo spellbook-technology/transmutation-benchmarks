@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "bundler/setup"
+require "active_support/core_ext/object/deep_dup" # Required for Active Model Serializers
 
 Bundler.require
 
@@ -15,41 +16,49 @@ loader.setup
 
 Rabl.configure do |config|
   config.include_json_root = false
+  config.include_child_root = false
 end
 
-jbuilder_template = File.read(File.expand_path("lib/views/users/show.json.jbuilder", __dir__))
-rabl_template = File.read(File.expand_path("lib/views/users/show.json.rabl", __dir__))
+user_jbuilder_template = File.read(File.expand_path("lib/views/users/show.json.jbuilder", __dir__))
+post_jbuilder_template = File.read(File.expand_path("lib/views/posts/show.json.jbuilder", __dir__))
+organisation_jbuilder_template = File.read(File.expand_path("lib/views/organisations/show.json.jbuilder", __dir__))
 
+user_rabl_template = File.read(File.expand_path("lib/views/users/show.json.rabl", __dir__))
+post_rabl_template = File.read(File.expand_path("lib/views/posts/show.json.rabl", __dir__))
+organisation_rabl_template = File.read(File.expand_path("lib/views/organisations/show.json.rabl", __dir__))
+
+organisation = Organisation.new(id: 1, name: "Example Inc.")
 user = User.new(id: 1, first_name: "John", last_name: "Doe", organisation_id: 1)
+post = Post.new(id: 1, title: "Sample Post", body: "Sample Body", user_id: 1)
 
-SerializerBenchmarks.report do
+GemBenchmarks.report output: true do
   group("Attributes") do
-    example("transmutation")            { Transmutation::UserSerializer.new(user).to_json }
-    example("panko_serializer")         { PankoSerializer::UserSerializer.new.serialize_to_json(user) }
-    example("jbuilder")                 { Jbuilder.encode { |json| json.instance_eval(jbuilder_template); json.target! } }
-    example("representable")            { Representable::UserRepresenter.new(user).to_json }
-    example("active_model_serializers") { ActiveModelSerializers::UserSerializer.new(user).to_json }
-    example("rabl")                     { Rabl::Renderer.json(user, rabl_template) }
-    example("jsonapi-serializer")       { Jsonapi::UserSerializer.new(user).to_json }
+    example("transmutation")            { Transmutation::OrganisationSerializer.new(organisation).to_json }
+    example("panko_serializer")         { PankoSerializer::OrganisationSerializer.new.serialize_to_json(organisation) }
+    example("jbuilder")                 { Jbuilder.encode { |json| json.instance_eval(organisation_jbuilder_template); json.target! } }
+    example("representable")            { Representable::OrganisationRepresenter.new(organisation).to_json }
+    example("active_model_serializers") { ActiveModelSerializers::OrganisationSerializer.new(organisation, namespace: ActiveModelSerializers).to_json }
+    example("rabl")                     { Rabl::Renderer.json(organisation, organisation_rabl_template) }
+    example("jsonapi-serializer")       { Jsonapi::OrganisationSerializer.new(organisation).to_json }
   end
 
-  # benchmark.group("Has One / Belongs To") do |group|
-  #   group.add(:transmutation)            { Transmutation::UserSerializer.new(user).to_json }
-  #   group.add(:panko_serializer)         { PankoSerializer::UserSerializer.new.serialize_to_json(user) }
-  #   group.add(:jbuilder)                 { JBuilder.encode { |json| json.instance_eval(jbuilder_template); json.target! } }
-  #   group.add(:representable)            { Representable::UserSerializer.new(user).to_json }
-  #   group.add(:active_model_serializers) { ActiveModelSerializers::SerializableResource.new(user).as_json }
-  #   group.add(:rabl)                     { Rabl::Renderer.json(user, rabl_template) }
-  #   group.add(:fast_jsonapi)             { FastJsonapi::UserSerializer.new(user).to_json }
-  # end
+  group("Has One / Belongs To") do
+    example("transmutation")            { Transmutation::PostSerializer.new(post).to_json }
+    example("panko_serializer")         { PankoSerializer::PostSerializer.new(except: { user: [:posts] }).serialize_to_json(post) }
+    example("jbuilder")                 { Jbuilder.encode { |json| json.instance_eval(post_jbuilder_template); json.target! } }
+    example("representable")            { Representable::PostRepresenter.new(post).to_json }
+    example("active_model_serializers") { ActiveModelSerializers::PostSerializer.new(post, namespace: ActiveModelSerializers).to_json }
+    example("rabl")                     { Rabl::Renderer.json(post, post_rabl_template) }
+    example("jsonapi-serializer")       { Jsonapi::PostSerializer.new(post, include: [:user]).to_json }
+  end
 
-  # benchmark.group("Has Many") do |group|
-  #   group.add(:transmutation)            { Transmutation::UserSerializer.new(user).to_json }
-  #   group.add(:panko_serializer)         { PankoSerializer::UserSerializer.new.serialize_to_json(user) }
-  #   group.add(:jbuilder)                 { JBuilder.encode { |json| json.instance_eval(jbuilder_template); json.target! } }
-  #   group.add(:representable)            { Representable::UserSerializer.new(user).to_json }
-  #   group.add(:active_model_serializers) { ActiveModelSerializers::SerializableResource.new(user).as_json }
-  #   group.add(:rabl)                     { Rabl::Renderer.json(user, rabl_template) }
-  #   group.add(:fast_jsonapi)             { FastJsonapi::UserSerializer.new(user).to_json }
-  # end
+  group("Has Many") do
+    example("transmutation")            { Transmutation::UserSerializer.new(user).to_json }
+    example("panko_serializer")         { PankoSerializer::UserSerializer.new.serialize_to_json(user) }
+    example("jbuilder")                 { Jbuilder.encode { |json| json.instance_eval(user_jbuilder_template); json.target! } }
+    example("representable")            { Representable::UserRepresenter.new(user).to_json }
+    example("active_model_serializers") { ActiveModelSerializers::UserSerializer.new(user, namespace: ActiveModelSerializers).to_json }
+    example("rabl")                     { Rabl::Renderer.json(user, user_rabl_template) }
+    example("jsonapi-serializer")       { Jsonapi::UserSerializer.new(user, include: [:posts]).to_json }
+  end
 end

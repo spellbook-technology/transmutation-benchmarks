@@ -7,5 +7,11 @@ module Representable
     property :id
     property :first_name
     property :full_name, getter: ->(represented:, **) { "#{represented.first_name} #{represented.last_name}" }
+
+    collection :posts do
+      property :id
+      property :title
+      property :body
+    end
   end
 end

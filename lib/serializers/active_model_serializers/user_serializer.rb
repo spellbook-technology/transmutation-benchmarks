@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require "active_support/core_ext/object/deep_dup"
-
 module ActiveModelSerializers
   class UserSerializer < ActiveModel::Serializer
     attributes :id, :first_name
@@ -9,5 +7,7 @@ module ActiveModelSerializers
     attribute :full_name do
       "#{object.first_name} #{object.last_name}"
     end
+
+    has_many :posts
   end
 end

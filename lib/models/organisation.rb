@@ -3,9 +3,9 @@
 class Organisation < Base
   attr_accessor :id, :name
 
-  def all
+  def self.all
     @all ||= [
-      Organisation.new(id: 1, name: 'Organisation 1'),
+      Organisation.new(id: 1, name: "Organisation 1"),
     ]
   end
 end

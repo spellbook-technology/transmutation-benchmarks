@@ -1,11 +1,16 @@
 # frozen_string_literal: true
 
-class SerializerBenchmarks
-  def self.report(&block)
-    new(&block).groups.values.each(&:report)
+class GemBenchmarks
+  attr_accessor :config
+
+  def self.report(**options, &block)
+    new(**options, &block).groups.values.each(&:report)
   end
 
-  def initialize(&block)
+  def initialize(**options, &block)
+    config[:output] = options.fetch(:output, true)
+    config[:style] = options.fetch(:style, :markdown)
+
     instance_eval(&block)
   end
 
@@ -13,17 +18,22 @@ class SerializerBenchmarks
     @groups ||= {}
   end
 
+  def config
+    @config ||= {}
+  end
+
   private
 
   def group(name, &block)
-    groups[name] = Group.new(name, &block)
+    groups[name] = Group.new(name, **config, &block)
   end
 
   class Group
-    attr_accessor :name
+    attr_accessor :name, :config
 
-    def initialize(name, &block)
+    def initialize(name, **config, &block)
       @name = name
+      @config = config
 
       instance_eval(&block)
     end
@@ -69,7 +79,7 @@ class SerializerBenchmarks
     end
 
     def calculate
-      calculate_outputs
+      calculate_outputs if config[:output]
       calculate_time
       calculate_memory
 
@@ -79,13 +89,12 @@ class SerializerBenchmarks
     def report
       calculate
 
-      table = Terminal::Table.new(title: name, headings:, rows:)
+      table = Terminal::Table.new(title: name, headings:, rows:, style: { border: config[:style] })
 
       table.align_column 1, :right
       table.align_column 2, :right
       table.align_column 3, :right
       table.align_column 4, :right
-      table.style = { border: :markdown }
 
       puts table
     end
@@ -95,31 +104,52 @@ class SerializerBenchmarks
     end
 
     def headings
-      ["Gem", "IPS", "Comparison", "Allocations", "Comparison", "Output"]
+      ["Gem", "IPS", "Comparison", "Allocations", "Comparison", (config[:output] ? "Output" : nil)].compact
     end
 
     def rows
       examples.values.lazy.sort_by(&:ips).reverse.map do |example|
-        [example.label, example.ips, example.ips_comparison, example.allocations, example.allocations_comparison, example.output]
+        [example.label, example.ips, example.ips_comparison, example.allocations, example.allocations_comparison, (config[:output] ? example.output : nil)].compact
       end
     end
 
     private
 
-    def example(name, &block)
-      examples[name] = Example.new(name, &block)
+    def example(gem_name, &block)
+      examples[gem_name] = Example.new(gem_name, **config, &block)
     end
 
     class Example
       attr_accessor :label, :block, :ips, :ips_comparison, :allocations, :allocations_comparison, :output
+      attr_accessor :gem_name, :config
 
-      def initialize(name, &block)
-        @label = "#{name} #{Gem.loaded_specs[name].version}"
+      def initialize(gem_name, **config, &block)
+        @gem_name = gem_name
+        @config = config
+        @label = if config[:style] == :markdown
+          "[#{gem_name} #{gem_version}](#{gem_url})"
+        else
+          "#{gem_name} #{gem_version}"
+        end
         @block = block
       end
 
       def run
         block.call
+      end
+
+      private
+
+      def gem_version
+        specs.version
+      end
+
+      def gem_url
+        specs.metadata["source_code_uri"] || specs.homepage || "https://rubygems.org/gems/#{gem_name}"
+      end
+
+      def specs
+        Gem.loaded_specs[gem_name]
       end
     end
   end

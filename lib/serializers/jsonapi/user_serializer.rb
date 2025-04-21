@@ -9,5 +9,7 @@ module Jsonapi
     attribute :full_name do |object|
       "#{object.first_name} #{object.last_name}"
     end
+
+    has_many :posts
   end
 end
