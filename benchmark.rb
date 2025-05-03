@@ -5,7 +5,7 @@ require "active_support/core_ext/object/deep_dup" # Required for Active Model Se
 
 Bundler.require
 
-Oj.mimic_JSON # Use OJ for benchmarks using #to_json
+Oj.optimize_rails # Use OJ for benchmarks using #to_json
 MultiJson.use(:oj) # Use OJ by default from multi_json
 
 loader = Zeitwerk::Loader.new
@@ -31,7 +31,7 @@ organisation = Organisation.new(id: 1, name: "Example Inc.")
 user = User.new(id: 1, first_name: "John", last_name: "Doe", organisation_id: 1)
 post = Post.new(id: 1, title: "Sample Post", body: "Sample Body", user_id: 1)
 
-GemBenchmarks.report output: true do
+GemBenchmarks.report output: false do
   group("Attributes") do
     example("transmutation")            { Transmutation::OrganisationSerializer.new(organisation).to_json }
     example("panko_serializer")         { PankoSerializer::OrganisationSerializer.new.serialize_to_json(organisation) }
@@ -39,7 +39,7 @@ GemBenchmarks.report output: true do
     example("representable")            { Representable::OrganisationRepresenter.new(organisation).to_json }
     example("active_model_serializers") { ActiveModelSerializers::OrganisationSerializer.new(organisation, namespace: ActiveModelSerializers).to_json }
     example("rabl")                     { Rabl::Renderer.json(organisation, organisation_rabl_template) }
-    example("jsonapi-serializer")       { Jsonapi::OrganisationSerializer.new(organisation).to_json }
+    example("alba")                     { Alba::OrganisationResource.new(organisation).serialize }
   end
 
   group("Has One / Belongs To") do
@@ -49,7 +49,7 @@ GemBenchmarks.report output: true do
     example("representable")            { Representable::PostRepresenter.new(post).to_json }
     example("active_model_serializers") { ActiveModelSerializers::PostSerializer.new(post, namespace: ActiveModelSerializers).to_json }
     example("rabl")                     { Rabl::Renderer.json(post, post_rabl_template) }
-    example("jsonapi-serializer")       { Jsonapi::PostSerializer.new(post, include: [:user]).to_json }
+    example("alba")                     { Alba::PostResource.new(post, within: :user).serialize }
   end
 
   group("Has Many") do
@@ -59,6 +59,6 @@ GemBenchmarks.report output: true do
     example("representable")            { Representable::UserRepresenter.new(user).to_json }
     example("active_model_serializers") { ActiveModelSerializers::UserSerializer.new(user, namespace: ActiveModelSerializers).to_json }
     example("rabl")                     { Rabl::Renderer.json(user, user_rabl_template) }
-    example("jsonapi-serializer")       { Jsonapi::UserSerializer.new(user, include: [:posts]).to_json }
+    example("alba")                     { Alba::UserResource.new(user, within: :posts).serialize }
   end
 end

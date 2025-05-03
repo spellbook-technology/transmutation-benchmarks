@@ -9,7 +9,7 @@ gem "rubocop"
 
 # Serializers
 gem "active_model_serializers"
-gem "jsonapi-serializer"
+gem "alba"
 gem "jbuilder"
 gem "panko_serializer"
 gem "rabl"
