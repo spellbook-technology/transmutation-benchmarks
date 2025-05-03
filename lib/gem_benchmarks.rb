@@ -1,10 +1,8 @@
 # frozen_string_literal: true
 
 class GemBenchmarks
-  attr_accessor :config
-
   def self.report(**options, &block)
-    new(**options, &block).groups.values.each(&:report)
+    new(**options, &block).groups.each_value(&:report)
   end
 
   def initialize(**options, &block)
@@ -39,7 +37,7 @@ class GemBenchmarks
     end
 
     def calculate_outputs
-      examples.each do |name, example|
+      examples.each_value do |example|
         example.output = example.run
       end
     end
@@ -127,10 +125,10 @@ class GemBenchmarks
         @gem_name = gem_name
         @config = config
         @label = if config[:style] == :markdown
-          "[#{gem_name} #{gem_version}](#{gem_url})"
-        else
-          "#{gem_name} #{gem_version}"
-        end
+                   "[#{gem_name} #{gem_version}](#{gem_url})"
+                 else
+                   "#{gem_name} #{gem_version}"
+                 end
         @block = block
       end
 
