@@ -87,14 +87,14 @@ class GemBenchmarks
     def report
       calculate
 
-      table = Terminal::Table.new(title: name, headings:, rows:, style: { border: config[:style] })
+      table = Terminal::Table.new(headings:, rows:, style: { border: config[:style] })
 
       table.align_column 1, :right
       table.align_column 2, :right
       table.align_column 3, :right
       table.align_column 4, :right
 
-      puts table
+      puts "### #{name}\n\n#{table}\n\n"
     end
 
     def examples
